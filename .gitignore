@@ -1,0 +1,11 @@
+instance/
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+.env
+*.sqlite
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
