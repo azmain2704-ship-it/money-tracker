@@ -1,68 +1,46 @@
 # Money Tracker
 
-A small web app for keeping track of your money. You log what you earn and spend, see where it goes, set monthly budgets and import bank statements. It's built with **Python, Flask and SQLite**, and backed by **25 automated tests**.
+A small Flask app I built to keep track of what I earn and spend each month. You can set budgets for things like food and fun, and it warns you when you're getting close or have gone over. You can also upload a bank statement CSV instead of typing everything in.
 
 ![Dashboard](screenshots/1-dashboard.png)
 
-## Features
+## What it does
 
-- **Add income and spending** with an amount, a category, a date and an optional note.
-- **Monthly dashboard** showing money in, money out, what's left over, and a bar for each category's spending.
-- **Budgets:** set a monthly limit per category. You get a ⚠️ warning at 80% and a ⛔ alert when you go over. Each bar also shows its limit as a marker line.
-- **Bank statement import:** upload a CSV with `Date, Description, Amount` and spending is sorted into categories automatically (Tesco → Food, Netflix → Fun, Trainline → Transport). Uploading the same statement twice is safe, because duplicates are skipped.
-- **Browse any month**, and delete entries.
+You add income or spending with an amount, category, date and an optional note. The dashboard shows money in, money out and what's left for the month, plus a bar for each category with your budget marked on it. You get a warning at 80% of a budget and an alert once you go over.
 
-## How the money is handled
+The statement import reads a CSV with `Date, Description, Amount` columns and guesses the category from the description, so Tesco goes under food and Netflix under fun. If you upload the same statement twice it skips the rows it already has.
 
-- **Money is stored as whole pence (integers), never as floats.** Floats can't hold 0.1 exactly: `0.1 + 0.2` gives `0.30000000000000004`, and those errors build up over hundreds of transactions. So `£12.50` is stored as `1250`, and amounts are parsed with Python's `Decimal`. A test proves the difference.
-- **Every SQL query uses `?` placeholders**, so user input can never be run as SQL.
-- **All output is escaped** by Jinja, so a description like `<script>` shows up as text. This is tested too.
-- **Uploads are capped at 1 MB**, and only `.csv` files are accepted.
-- **The database also checks the data:** `CHECK (amount_pence > 0)` and `CHECK (kind IN ('income','expense'))`. Bad data is blocked even if the app has a bug.
+## Built with
 
-## Run it
+Python, Flask and SQLite, with pytest for the tests.
+
+## Storing money as pence
+
+The main thing I learned building this: don't store money as floats. In Python, `0.1 + 0.2` gives `0.30000000000000004`, and errors like that pile up over hundreds of transactions. So every amount is stored as a whole number of pence (£12.50 is saved as `1250`) and only turned back into pounds when it's displayed. There's a test that shows the float problem next to the fix.
+
+Other things I made sure of:
+
+- every SQL query uses `?` placeholders
+- Jinja escapes everything on the page, so typing `<script>` into a note just shows the text
+- uploads are capped at 1 MB and have to be `.csv`
+- the database won't accept a zero or negative amount, even if the app has a bug
+
+## Running it
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate        # Windows  (macOS/Linux: source .venv/bin/activate)
+.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 python run.py
 ```
 
-Then open http://127.0.0.1:5000. The database file is created automatically in `instance/`.
-
-**To try the import:** go to **Import statement** and upload `examples/sample_statement.csv`.
+Then go to http://127.0.0.1:5000. To try the import, upload `examples/sample_statement.csv` from the Import statement page.
 
 ## Tests
 
-```bash
-pytest
-```
+Run `pytest`. There are 25 tests. Some check the maths: pence conversion, category totals and the budget edge cases (80% counts as a warning, exactly 100% isn't over, 1p more is). The rest go through the whole app with Flask's test client and a fresh database each time. Writing them caught two real bugs: CSV errors pointed at the wrong line number, and "BUSINESS" was being filed under transport because it contains "bus".
 
-There are 25 tests in two files:
-
-| File | What it checks |
-|---|---|
-| `tests/test_finance.py` | The maths: converting £ to pence exactly, the float problem, category totals, income minus spending, the budget edge cases (79.99% is OK, 80% is a warning, exactly 100% is *not* over, 1p over *is* over), parsing a statement CSV and auto-categorising |
-| `tests/test_app.py` | The whole app through Flask's test client, each test with a fresh temporary database: adding entries updates the totals, bad amounts are rejected, overspending shows an alert, re-uploading a statement doesn't double-count, and HTML in a description is escaped |
-
-## Project structure
-
-```
-money-tracker/
-├── run.py                  Starts the app
-├── tracker/
-│   ├── __init__.py         Flask app + routes (create_app factory)
-│   ├── finance.py          The money maths: pure functions, no Flask, easy to test
-│   ├── db.py               SQLite schema and queries
-│   ├── templates/          Jinja HTML pages
-│   └── static/style.css
-├── tests/                  pytest suite
-├── examples/sample_statement.csv
-└── screenshots/
-```
-
-I kept the maths in `finance.py`, separate from the web code, so it can be tested without starting a server.
+The maths lives in `finance.py`, separate from the Flask code, so it can be tested without starting a server.
 
 ## Screenshots
 
@@ -70,14 +48,10 @@ I kept the maths in `finance.py`, separate from the web code, so it can be teste
 |---|---|
 | ![Entries](screenshots/2-entries.png) | ![Budgets](screenshots/3-budgets.png) |
 
-| Import a statement | Re-importing the same file |
+| Importing a statement | Importing it again |
 |---|---|
 | ![Import](screenshots/4-import.png) | ![Duplicates skipped](screenshots/5-import-duplicates-skipped.png) |
 
-## What I'd add next
+## Next
 
-- User accounts with hashed passwords (`werkzeug.security`), so each person sees only their own data
-- CSRF protection on forms (Flask-WTF)
-- Editing an entry's category after import, and learning from those corrections
-- A spending-over-time chart across months
-- Support for each bank's own CSV layout (Monzo, Lloyds, Barclays)
+User accounts, CSRF protection on the forms, being able to change a category after importing, and a chart of spending across months.
