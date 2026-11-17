@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}All entries · Money Tracker{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>All entries</h1>
+    {% include "_month_picker.html" %}
+</div>
+<section class="panel">
+    {% include "_entries_table.html" %}
+</section>
+{% endblock %}

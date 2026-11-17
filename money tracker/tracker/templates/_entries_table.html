@@ -1,0 +1,22 @@
+{% if entries %}
+<table class="entries">
+    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th><th></th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+        <tr>
+            <td>{{ e.date }}</td>
+            <td>{{ e.description or '—' }}{% if e.source == 'statement' %} <span class="tag">imported</span>{% endif %}</td>
+            <td>{{ e.category|title }}</td>
+            <td class="num {{ 'income' if e.kind == 'income' }}">{{ '+' if e.kind == 'income' else '−' }}{{ e.amount_pence|money }}</td>
+            <td class="num">
+                <form method="post" action="{{ url_for('delete', entry_id=e.id) }}" onsubmit="return confirm('Delete this entry?')">
+                    <button class="link-button" type="submit" aria-label="Delete entry">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <p class="empty">Nothing here for this month.</p>
+{% endif %}

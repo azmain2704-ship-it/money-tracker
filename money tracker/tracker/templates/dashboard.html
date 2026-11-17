@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+    <h1>Dashboard</h1>
+    {% include "_month_picker.html" %}
+</div>
+
+{% for a in alerts %}
+    <div class="alert alert-{{ a.state }}" role="alert">
+        <span class="icon" aria-hidden="true">{{ '⛔' if a.state == 'over' else '⚠️' }}</span>
+        {% if a.state == 'over' %}
+            <strong>Over budget on {{ a.category }}:</strong> {{ a.spent|money }} spent of {{ a.limit|money }}
+            ({{ (-a.remaining)|money }} over).
+        {% else %}
+            <strong>Nearly at your {{ a.category }} budget:</strong> {{ a.percent }}% used, {{ a.remaining|money }} left.
+        {% endif %}
+    </div>
+{% endfor %}
+
+<section class="cards">
+    <div class="card"><div class="label">Money in</div><div class="value">{{ summary.income|money }}</div></div>
+    <div class="card"><div class="label">Money out</div><div class="value">{{ summary.spent|money }}</div></div>
+    <div class="card"><div class="label">Left over</div>
+        <div class="value {{ 'negative' if summary.left < 0 }}">{{ summary.left|money }}</div></div>
+</section>
+
+<div class="grid">
+    <section class="panel">
+        <h2>Add an entry</h2>
+        <form method="post" class="entry-form">
+            <div class="toggle">
+                <label><input type="radio" name="kind" value="expense" checked> Spending</label>
+                <label><input type="radio" name="kind" value="income"> Income</label>
+            </div>
+            <label>Amount (£)
+                <input name="amount" inputmode="decimal" placeholder="12.50" required>
+            </label>
+            <label>Category
+                <select name="category" id="category" required>
+                    <optgroup label="Spending" data-kind="expense">
+                        {% for c in expense_categories %}<option value="{{ c }}">{{ c|title }}</option>{% endfor %}
+                    </optgroup>
+                    <optgroup label="Income" data-kind="income" disabled hidden>
+                        {% for c in income_categories %}<option value="{{ c }}">{{ c|title }}</option>{% endfor %}
+                    </optgroup>
+                </select>
+            </label>
+            <label>Date <input type="date" name="date" value="{{ today }}" required></label>
+            <label>Description <input name="description" maxlength="100" placeholder="Optional"></label>
+            <button type="submit">Add entry</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Spending by category</h2>
+        {% if totals %}
+            <ul class="bars">
+                {% for cat, pence in totals.items() %}
+                    {% set b = budget_by_cat.get(cat) %}
+                    {% set scale = [biggest, b.limit if b else 0]|max %}
+                    <li>
+                        <div class="bar-label">
+                            <span>{{ cat|title }}</span>
+                            <span class="amount">{{ pence|money }}{% if b %} <span class="of">of {{ b.limit|money }}</span>{% endif %}</span>
+                        </div>
+                        <div class="track">
+                            <div class="fill {{ 'fill-' ~ b.state if b }}" style="width: {{ (pence / scale * 100)|round(1) }}%"></div>
+                            {% if b %}<div class="limit" style="left: {{ (b.limit / scale * 100)|round(1) }}%" title="Budget {{ b.limit|money }}"></div>{% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+            <p class="hint">The thin dark line on a bar is that category's monthly budget.</p>
+        {% else %}
+            <p class="empty">No spending this month yet.</p>
+        {% endif %}
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-head">
+        <h2>Latest entries</h2>
+        <a href="{{ url_for('entries', month=month) }}">See all →</a>
+    </div>
+    {% include "_entries_table.html" %}
+</section>
+
+<script>
+    // Show only the categories that match Spending / Income
+    const select = document.getElementById("category");
+    document.querySelectorAll('input[name="kind"]').forEach(radio => radio.addEventListener("change", () => {
+        select.querySelectorAll("optgroup").forEach(group => {
+            const on = group.dataset.kind === radio.value;
+            group.disabled = !on; group.hidden = !on;
+        });
+        select.value = select.querySelector(`optgroup[data-kind="${radio.value}"] option`).value;
+    }));
+</script>
+{% endblock %}

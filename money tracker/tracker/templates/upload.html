@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Import statement · Money Tracker{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Import a bank statement</h1></div>
+<div class="grid">
+    <section class="panel">
+        <h2>Upload a CSV</h2>
+        <form method="post" enctype="multipart/form-data" class="entry-form">
+            <label>Statement file (.csv, max 1 MB)
+                <input type="file" name="statement" accept=".csv,text/csv" required>
+            </label>
+            <button type="submit">Import</button>
+        </form>
+        <p class="hint">Uploading the same statement twice is safe: rows that are already imported get skipped.</p>
+    </section>
+    <section class="panel">
+        <h2>What the file should look like</h2>
+        <p>Most UK banks let you export transactions as CSV. The file needs these three columns:</p>
+        <pre>Date,Description,Amount
+03/11/2026,TESCO STORES CARDIFF,-23.45
+05/11/2026,PART-TIME JOB PAYROLL,412.80
+07/11/2026,NETFLIX.COM,-5.99</pre>
+        <p class="hint">Negative = money out, positive = money in. Spending is sorted into categories automatically
+            from the description (Tesco → Food, Netflix → Fun). You can't edit the category after import yet,
+            but you can delete and re-add an entry.</p>
+    </section>
+</div>
+{% endblock %}

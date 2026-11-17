@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Budgets · Money Tracker{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Monthly budgets</h1></div>
+<div class="grid">
+    <section class="panel">
+        <h2>Set a budget</h2>
+        <p class="hint">You'll get a warning on the dashboard at 80% of a budget, and an alert when you go over.</p>
+        <form method="post" class="entry-form">
+            <label>Category
+                <select name="category">
+                    {% for c in expense_categories %}<option value="{{ c }}">{{ c|title }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>Monthly limit (£) <input name="limit" inputmode="decimal" placeholder="150" required></label>
+            <button type="submit">Save budget</button>
+        </form>
+    </section>
+    <section class="panel">
+        <h2>Your budgets</h2>
+        {% if budgets %}
+        <table class="entries">
+            <thead><tr><th>Category</th><th class="num">Limit per month</th><th></th></tr></thead>
+            <tbody>
+            {% for cat, limit in budgets.items() %}
+                <tr>
+                    <td>{{ cat|title }}</td>
+                    <td class="num">{{ limit|money }}</td>
+                    <td class="num">
+                        <form method="post">
+                            <input type="hidden" name="category" value="{{ cat }}">
+                            <button class="link-button" name="action" value="remove">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="empty">No budgets yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
