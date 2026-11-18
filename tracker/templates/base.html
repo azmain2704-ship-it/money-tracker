@@ -21,6 +21,9 @@
 </header>
 
 <main class="wrap">
+    {% if demo_mode %}
+        <div class="flash flash-demo">Live demo with sample data. Everyone shares it and it resets when the server restarts, so feel free to try anything.</div>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for kind, message in messages %}
             <div class="flash flash-{{ kind }}" role="status">
