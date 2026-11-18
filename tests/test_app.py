@@ -56,3 +56,21 @@ def test_html_in_description_is_escaped(client):
     page = client.get("/entries?month=2026-11").get_data(as_text=True)
     assert "<script>alert(1)</script>" not in page
     assert "&lt;script&gt;" in page
+
+
+def test_demo_data_fills_an_empty_database(tmp_path):
+    app = create_app({"TESTING": True, "DATABASE": str(tmp_path / "demo.sqlite"), "SECRET_KEY": "test",
+                      "DEMO_DATA": True})
+    from datetime import date
+    page = app.test_client().get("/").get_data(as_text=True)
+    assert "Live demo with sample data" in page
+    assert "Over budget on fun" in page          # the sample month goes over the fun budget
+    from tracker import db
+    with app.app_context():
+        assert date.today().strftime("%Y-%m") in db.months_with_entries()
+        from tracker.demo import seed_if_empty
+        assert seed_if_empty() == 0              # never seeds twice
+
+
+def test_no_demo_banner_normally(client):
+    assert "Live demo" not in client.get("/").get_data(as_text=True)
