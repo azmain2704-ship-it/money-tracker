@@ -1,6 +1,7 @@
 """Money tracker: a small Flask app for logging income and spending, with budgets and bank statement import."""
 import os
 import re
+import secrets
 from datetime import date
 
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -15,7 +16,9 @@ MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.update(
-        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-only-change-me"),
+        # On Render there's no SECRET_KEY set, so make a random one each start (it only protects flash messages)
+        SECRET_KEY=os.environ.get("SECRET_KEY") or (secrets.token_hex(32) if os.environ.get("RENDER") else "dev-only-change-me"),
+        DEMO_DATA=os.environ.get("DEMO_DATA") == "1",
         DATABASE=os.path.join(app.instance_path, "tracker.sqlite"),
         MAX_CONTENT_LENGTH=1 * 1024 * 1024,  # reject uploads over 1 MB
     )
@@ -26,6 +29,9 @@ def create_app(test_config=None):
     app.teardown_appcontext(db.close_db)
     with app.app_context():
         db.init_db()
+        if app.config["DEMO_DATA"]:
+            from .demo import seed_if_empty
+            seed_if_empty()
 
     app.jinja_env.filters["money"] = format_pence
 
@@ -35,7 +41,8 @@ def create_app(test_config=None):
 
     @app.context_processor
     def inject_globals():
-        return {"expense_categories": EXPENSE_CATEGORIES, "income_categories": INCOME_CATEGORIES}
+        return {"expense_categories": EXPENSE_CATEGORIES, "income_categories": INCOME_CATEGORIES,
+                "demo_mode": app.config["DEMO_DATA"]}
 
     @app.route("/", methods=["GET", "POST"])
     def dashboard():
