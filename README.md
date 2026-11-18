@@ -4,6 +4,8 @@
 
 A small Flask app I built to keep track of what I earn and spend each month. You can set budgets for things like food and fun, and it warns you when you're getting close or have gone over. You can also upload a bank statement CSV instead of typing everything in.
 
+**Try it live: [money-tracker-a8r4.onrender.com](https://money-tracker-a8r4.onrender.com)** (it's loaded with a sample month of spending, everyone shares it and it resets whenever the free server restarts, so add or delete whatever you like. The first visit after a quiet spell takes about a minute while the server wakes up.)
+
 ![Dashboard](screenshots/1-dashboard.png)
 
 ## What it does
@@ -40,7 +42,7 @@ Then go to http://127.0.0.1:5000. To try the import, upload `examples/sample_sta
 
 ## Tests
 
-Run `pytest`. There are 25 tests. Some check the maths: pence conversion, category totals and the budget edge cases (80% counts as a warning, exactly 100% isn't over, 1p more is). The rest go through the whole app with Flask's test client and a fresh database each time. Writing them caught two real bugs: CSV errors pointed at the wrong line number, and "BUSINESS" was being filed under transport because it contains "bus".
+Run `pytest`. There are 27 tests. Some check the maths: pence conversion, category totals and the budget edge cases (80% counts as a warning, exactly 100% isn't over, 1p more is). The rest go through the whole app with Flask's test client and a fresh database each time. Writing them caught two real bugs: CSV errors pointed at the wrong line number, and "BUSINESS" was being filed under transport because it contains "bus".
 
 The maths lives in `finance.py`, separate from the Flask code, so it can be tested without starting a server.
 
