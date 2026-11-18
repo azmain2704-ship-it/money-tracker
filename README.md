@@ -1,5 +1,7 @@
 # Money Tracker
 
+[![tests](https://github.com/azmain2704-ship-it/money-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/azmain2704-ship-it/money-tracker/actions/workflows/tests.yml)
+
 A small Flask app I built to keep track of what I earn and spend each month. You can set budgets for things like food and fun, and it warns you when you're getting close or have gone over. You can also upload a bank statement CSV instead of typing everything in.
 
 ![Dashboard](screenshots/1-dashboard.png)
